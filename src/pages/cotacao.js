@@ -1,52 +1,75 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 export default function Cotacao() {
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
-  const [cotacoes, setCotacoes] = useState([]);
+  const [dataInicial, setDataInicial] = useState('');
+  const [dataFinal, setDataFinal] = useState('');
+  const [erro, setErro] = useState('');
+  const [resultado, setResultado] = useState(null);
 
-  const buscarCotacao = async () => {
-    if (!dataInicio || !dataFim) {
-      alert("Preencha as duas datas!");
+  const handleCotacao = () => {
+    if (!dataInicial || !dataFinal) {
+      setErro('Por favor, preencha as duas datas.');
+      setResultado(null);
       return;
     }
-
-    try {
-      const res = await fetch(`/api/cotacao?start=${dataInicio}&end=${dataFim}`);
-      const dados = await res.json();
-
-      if (res.ok) {
-        setCotacoes(Object.entries(dados).map(([data, valor]) => ({ data, valor })));
-      } else {
-        alert("Erro na resposta da API");
-      }
-    } catch (error) {
-      alert("Erro ao buscar cotação");
-      console.error(error);
+    if (dataFinal < dataInicial) {
+      setErro('Data final não pode ser anterior à data inicial.');
+      setResultado(null);
+      return;
     }
+    setErro('');
+    setResultado({
+      inicio: dataInicial,
+      fim: dataFinal,
+      valor: 'R$ 1.500,00',
+    });
   };
 
   return (
-    <div style={{ padding: '40px' }}>
-      <h2>Buscar Cotação USD/BRL</h2>
+    <div className="container">
+      <h2 className="titulo">Cotação de Serviços</h2>
 
-      <div>
-        <label>Data Início: </label>
-        <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+      <div className="formulario">
+        <label className="label">
+          Data Inicial
+          <input
+            type="date"
+            className="input"
+            value={dataInicial}
+            onChange={(e) => setDataInicial(e.target.value)}
+          />
+        </label>
+
+        <label className="label">
+          Data Final
+          <input
+            type="date"
+            className="input"
+            value={dataFinal}
+            onChange={(e) => setDataFinal(e.target.value)}
+          />
+        </label>
+
+        <button className="button" onClick={handleCotacao}>
+          Calcular Cotação
+        </button>
       </div>
 
-      <div>
-        <label>Data Fim: </label>
-        <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
-      </div>
+      {erro && <div className="erro">{erro}</div>}
 
-      <button onClick={buscarCotacao}>Buscar</button>
-
-      <ul>
-        {cotacoes.map((c, i) => (
-          <li key={i}>{c.data}: R$ {c.valor.toFixed(2)}</li>
-        ))}
-      </ul>
+      {resultado && (
+        <div className="resultado">
+          <div className="item">
+            <strong>Data Inicial:</strong> {resultado.inicio}
+          </div>
+          <div className="item">
+            <strong>Data Final:</strong> {resultado.fim}
+          </div>
+          <div className="item">
+            <strong>Valor Estimado:</strong> {resultado.valor}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
